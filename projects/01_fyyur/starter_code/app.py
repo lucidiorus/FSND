@@ -33,14 +33,13 @@ class Venue(db.Model):
     __tablename__ = 'venue'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-    city = db.Column(db.String(120), nullable=False)
-    state = db.Column(db.String(120), nullable=False)
-    address = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(120), nullable=False)
-    genres = db.Column(db.String(120), nullable=False)
-    imageLink = db.Column(db.String(500), nullable=True)
-    facebookLink = db.Column(db.String(120), nullable=True)
+    name = db.Column(db.String)
+    city = db.Column(db.String(120))
+    state = db.Column(db.String(120))
+    address = db.Column(db.String(120))
+    phone = db.Column(db.String(120))
+    image_link = db.Column(db.String(500))
+    facebook_link = db.Column(db.String(120))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -48,16 +47,15 @@ class Artist(db.Model):
     __tablename__ = 'artist'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-    city = db.Column(db.String(120), nullable=False)
-    state = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(120), nullable=False)
-    genres = db.Column(db.String(120), nullable=False)
-    imageLink = db.Column(db.String(500), nullable=True)
-    facebookLink = db.Column(db.String(120), nullable=True)
+    name = db.Column(db.String)
+    city = db.Column(db.String(120))
+    state = db.Column(db.String(120))
+    phone = db.Column(db.String(120))
+    genres = db.Column(db.String(120))
+    image_link = db.Column(db.String(500))
+    facebook_link = db.Column(db.String(120))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
@@ -71,7 +69,7 @@ def format_datetime(value, format='medium'):
       format="EEEE MMMM, d, y 'at' h:mma"
   elif format == 'medium':
       format="EE MM, dd, y h:mma"
-  return babel.dates.format_datetime(date, format, locale='en')
+  return babel.dates.format_datetime(date, format)
 
 app.jinja_env.filters['datetime'] = format_datetime
 
@@ -91,8 +89,6 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
-  venues = Venue.query.all()
-
   data=[{
     "city": "San Francisco",
     "state": "CA",
@@ -115,7 +111,6 @@ def venues():
     }]
   }]
   return render_template('pages/venues.html', areas=data);
-  #return render_template('pages/venues.html', areas=venues);
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
@@ -136,11 +131,6 @@ def search_venues():
 def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
-
-  venue = Venue.query.get(venue_id)
-
-
-
   data1={
     "id": 1,
     "name": "The Musical Hop",
@@ -218,8 +208,8 @@ def show_venue(venue_id):
     "past_shows_count": 1,
     "upcoming_shows_count": 1,
   }
-  #data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
-  return render_template('pages/show_venue.html', venue=venue)
+  data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
+  return render_template('pages/show_venue.html', venue=data)
 
 #  Create Venue
 #  ----------------------------------------------------------------
@@ -233,26 +223,9 @@ def create_venue_form():
 def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
-  name = request.form['name']
-  city = request.form['city']
-  state = request.form['state']
-  address = request.form['address']
-  phone = request.form['phone']
-  genres = request.form['genres']
-  genres = '"Rock", "Heavy"'
-  imageLink = request.form['image_link']
-  facebookLink = request.form['facebook_link']
-
-  venue = Venue(name=name, city=city, state=state, address=address, 
-    phone=phone, genres=genres, imageLink=imageLink, facebookLink=facebookLink)
-
-  db.session.add(venue);
-  db.session.commit();
-  db.session.close();
-  
 
   # on successful db insert, flash success
-  flash('Venue ' + name + ' was successfully listed!')
+  flash('Venue ' + request.form['name'] + ' was successfully listed!')
   # TODO: on unsuccessful db insert, flash an error instead.
   # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
@@ -445,22 +418,7 @@ def create_artist_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
 
-  name = request.form['name']
-  city = request.form['city']
-  state = request.form['state']
-  phone = request.form['phone']
-  genres = request.form['genres']
-  imageLink = request.form['image_link']
-  facebookLink = request.form['facebook_link']
-
-  artist = Artist(name=name, city=city, state=state, 
-    phone=phone, genres=genres, imageLink=imageLink, facebookLink=facebookLink)
-
-  
   # on successful db insert, flash success
-  db.session.add(artist);
-  db.session.commit();
-  db.session.close();
   flash('Artist ' + request.form['name'] + ' was successfully listed!')
   # TODO: on unsuccessful db insert, flash an error instead.
   # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
