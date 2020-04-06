@@ -9,7 +9,7 @@ from flask import Flask, render_template, request, Response, flash, redirect, ur
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from sqlalchemy import distinct
+from sqlalchemy import distinct, text
 import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
@@ -107,39 +107,57 @@ def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
 
-  # query_special = db.session.query(Venue.city.distinct().label("city"))
-  # cities = [row.city for row in query_special.all()]
-  
-  # data=[]
+  areas = []
+  sql = text('select city, state FROM venue GROUP BY city, state ORDER BY city')
+  result = db.engine.execute(sql)
+  cityAndState = result.fetchone()
+  while cityAndState is not None:
+    currentArea = {}
+    currentArea["city"] = city = cityAndState[0]
+    currentArea["state"] = state = cityAndState[1]
+    
+    venues = []
+    venuesInArea = Venue.query.filter_by(city=city, state=state).all()
+    for venue in venuesInArea:
+      currentVenue = {}
+      currentVenue["id"] = venue.id
+      currentVenue["name"] = venue.name
+      venues.append(currentVenue)
+    
+    currentArea["venues"] = venues
+    areas.append(currentArea)
+    cityAndState = result.fetchone()
+
+  # print(areas)
   # for city in cities:
   #   venues = Venue.query.filter_by(city=city).all()
   #   allVenues = []
   #   for venue in venues:
   #     currentVenue = '"id": ' + venue.id + ', "name": "' + venue.name + '", "num_upcoming_shows":0'
   #     allVenues.loads(cu)    
-      
-  data=[{
-    "city": "San Francisco",
-    "state": "CA",
-    "venues": [{
-      "id": 1,
-      "name": "The Musical Hop",
-      "num_upcoming_shows": 0,
-    }, {
-      "id": 3,
-      "name": "Park Square Live Music & Coffee",
-      "num_upcoming_shows": 1,
-    }]
-  }, {
-    "city": "New York",
-    "state": "NY",
-    "venues": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }]
-  return render_template('pages/venues.html', areas=data)
+
+  # data=[{
+  #   "city": "San Francisco",
+  #   "state": "CA",
+  #   "venues": [{
+  #     "id": 1,
+  #     "name": "The Musical Hop",
+  #     "num_upcoming_shows": 0,
+  #   }, {
+  #     "id": 3,
+  #     "name": "Park Square Live Music & Coffee",
+  #     "num_upcoming_shows": 1,
+  #   }]
+  # }, {
+  #   "city": "New York",
+  #   "state": "NY",
+  #   "venues": [{
+  #     "id": 2,
+  #     "name": "The Dueling Pianos Bar",
+  #     "num_upcoming_shows": 0,
+  #   }]
+  # }]
+  return render_template('pages/venues.html', areas=areas)
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
@@ -288,7 +306,8 @@ def create_venue_submission():
     #flash('Venue ' + request.form['name'] + ' was successfully listed!')
     flash('Venue ' + name + ' was successfully listed!')
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-    return render_template('pages/home.html')
+  
+  return render_template('pages/home.html')
    
  
   # TODO: on unsuccessful db insert, flash an error instead.
