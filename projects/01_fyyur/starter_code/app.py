@@ -9,6 +9,7 @@ from flask import Flask, render_template, request, Response, flash, redirect, ur
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from sqlalchemy import distinct
 import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
@@ -34,7 +35,7 @@ class Venue(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
-    genres = db.Column(db.String(500))
+    genres = db.Column(db.ARRAY(db.String))
     city = db.Column(db.String(120))
     state = db.Column(db.String(120))
     address = db.Column(db.String(120))
@@ -52,7 +53,7 @@ class Artist(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    genres = db.Column(db.String(120))
+    genres = db.Column(db.ARRAY(db.String))
     city = db.Column(db.String(120))
     state = db.Column(db.String(120))
     phone = db.Column(db.String(120))
@@ -63,7 +64,7 @@ class Artist(db.Model):
     seeking_description = db.Column(db.String(500))
 
    
-    # DONE: implement any missing fields, as a database migration using Flask-Migrate
+    # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 class Show(db.Model):
@@ -105,6 +106,18 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
+
+  # query_special = db.session.query(Venue.city.distinct().label("city"))
+  # cities = [row.city for row in query_special.all()]
+  
+  # data=[]
+  # for city in cities:
+  #   venues = Venue.query.filter_by(city=city).all()
+  #   allVenues = []
+  #   for venue in venues:
+  #     currentVenue = '"id": ' + venue.id + ', "name": "' + venue.name + '", "num_upcoming_shows":0'
+  #     allVenues.loads(cu)    
+      
   data=[{
     "city": "San Francisco",
     "state": "CA",
@@ -126,7 +139,7 @@ def venues():
       "num_upcoming_shows": 0,
     }]
   }]
-  return render_template('pages/venues.html', areas=data);
+  return render_template('pages/venues.html', areas=data)
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
@@ -240,12 +253,47 @@ def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
 
-  # on successful db insert, flash success
-  flash('Venue ' + request.form['name'] + ' was successfully listed!')
+  error = False
+  try:
+    name = request.form['name']
+    city = request.form['city']
+    state = request.form['state']
+    address = request.form['address']
+    phone = request.form['phone']
+    genres = request.form.getlist('genres')
+    facebook_link = request.form['facebook_link']
+    website= request.form['website']
+    image_link = request.form['image_link']
+    if 'seeking_talent' not in request.form:
+      seeking_talent = False
+    else:
+      seeking_talent = True
+    
+    venue = Venue(name=name, city=city, state=state, address=address, phone=phone,
+    facebook_link=facebook_link, genres=genres, website=website, image_link=image_link,
+    seeking_talent=seeking_talent)
+
+    db.session.add(venue);
+    db.session.commit();
+  except:
+    error = True
+    db.session.rollback()
+    print(sys.exc_info())
+  finally:
+      db.session.close()
+  if error:
+    flash('An error occurred. Venue ' + data.name + ' could not be listed.')
+  else:
+    # on successful db insert, flash success
+    #flash('Venue ' + request.form['name'] + ' was successfully listed!')
+    flash('Venue ' + name + ' was successfully listed!')
+    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    return render_template('pages/home.html')
+   
+ 
   # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-  return render_template('pages/home.html')
+  #LEFT image_link, seeking_talent, seeking_description
+  
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
