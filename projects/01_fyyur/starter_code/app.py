@@ -46,6 +46,7 @@ class Venue(db.Model):
     facebook_link = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean, default=False)
     seeking_description = db.Column(db.String())
+    shows = db.relationship('Show', back_populates="venue")
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -63,6 +64,7 @@ class Artist(db.Model):
     facebook_link = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean, default=False)
     seeking_description = db.Column(db.String(500))
+    shows = db.relationship('Show', back_populates="artist")
 
    
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
@@ -74,6 +76,8 @@ class Show(db.Model):
   artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'))
   venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'))
   start_time = db.Column(db.String())
+  artist = db.relationship("Artist", back_populates="shows")
+  venue = db.relationship("Venue", back_populates="shows")
 
 
 
