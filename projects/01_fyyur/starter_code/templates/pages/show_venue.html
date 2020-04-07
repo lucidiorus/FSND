@@ -6,6 +6,7 @@
 		<h1 class="monospace">
 			{{ venue.name }}
 		</h1>
+		<button id="delete-button" data-id="{{ venue.id }}">Delete Venue</button>
 		<p class="subtitle">
 			ID: {{ venue.id }}
 		</p>
@@ -74,6 +75,25 @@
 		{% endfor %}
 	</div>
 </section>
+<script>
+	document.getElementById("delete-button").onclick = function(e) {
+		console.log('event', e);
+		const venue_id = e.target.dataset['id']
+		fetch('/venues/'+ venue_id, {
+			method: 'DELETE'
+		})
+		.then(function(response) {
+			return response.json();
+		})
+		.then(function(jsonResponse) {
+			console.log(jsonResponse);
+		})
+		.catch(function(){
+			document.getElementById('error').className = '';
+		})
+		location.href = "/venues";
+	}
+</script>
 
 {% endblock %}
 
