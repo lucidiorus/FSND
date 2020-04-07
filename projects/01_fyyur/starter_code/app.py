@@ -6,7 +6,7 @@ import json
 import dateutil.parser
 import babel
 import sys
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -48,7 +48,7 @@ class Venue(db.Model):
     seeking_description = db.Column(db.String())
     shows = db.relationship('Show', back_populates="venue")
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    # DONE: implement any missing fields, as a database migration using Flask-Migrate
 
 class Artist(db.Model):
     __tablename__ = 'artist'
@@ -66,10 +66,9 @@ class Artist(db.Model):
     seeking_description = db.Column(db.String(500))
     shows = db.relationship('Show', back_populates="artist")
 
-   
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    # DONE: implement any missing fields, as a database migration using Flask-Migrate
 
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+# DONE Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 class Show(db.Model):
   __tablename__ = 'show'
   id = db.Column(db.Integer, primary_key=True)
@@ -111,6 +110,8 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
+
+  #LEFT UPCOMING SHOWS...
 
   areas = []
   sql = text('select city, state FROM venue GROUP BY city, state ORDER BY city')
@@ -170,6 +171,8 @@ def search_venues():
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
 
+  #LEFT UPCOMING SHOWS
+
   searchTerm = request.form['search_term']
   if searchTerm:
     venues = Venue.query.filter(Venue.name.ilike('%'+searchTerm+'%')).all()
@@ -202,8 +205,14 @@ def search_venues():
 def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
+
+  #LEFT UPCOMING SHOWS
   
   venue = Venue.query.get(venue_id)
+
+  
+  if venue is None:
+    return redirect(url_for('venues'))
 
   data={}
   data["id"]=venue.id
@@ -356,19 +365,38 @@ def create_venue_submission():
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   
   return render_template('pages/home.html')
-   
- 
+  
   # DONE: on unsuccessful db insert, flash an error instead.
   
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
+# @app.route('/venues/delete/<venue_id>')
 def delete_venue(venue_id):
-  # TODO: Complete this endpoint for taking a venue_id, and using
+  # DONE: Complete this endpoint for taking a venue_id, and using
   # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
 
-  # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
+  error = False
+  try:
+    venue = Venue.query.filter_by(id=venue_id).one_or_none()
+    db.session.delete(venue)
+    db.session.commit()
+  except:
+    error = True
+    db.session.rollback()
+    print(sys.exc_info())
+  finally:
+      db.session.close()
+  if error:
+    flash('An error occurred. Venue with id ' + venue_id + ' could not be deleted.')
+  else:
+    flash('Venue with id ' + venue_id + ' was successfully deleted!')
+    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+  
+    # TODO BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
   # clicking that button delete it from the db then redirect the user to the homepage
-  return None
+
+  return redirect(url_for('venues'))
+
 
 #  Artists
 #  ----------------------------------------------------------------
@@ -642,7 +670,7 @@ def create_artist_submission():
 @app.route('/shows')
 def shows():
   # displays list of shows at /shows
-  # TODO: replace with real venues data.
+  # DONE: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
 
   shows = Show.query.all();
@@ -651,12 +679,10 @@ def shows():
   for show in shows:
     currentShow = {}
     currentShow["venue_id"]=show.venue_id
-    venueInfo = Venue.query.get(show.venue_id)
-    currentShow["venue_name"]=venueInfo.name
+    currentShow["venue_name"]=show.venue.name
     currentShow["artist_id"]=show.artist_id
-    artistInfo = Artist.query.get(show.artist_id)
-    currentShow["artist_name"]=artistInfo.name
-    currentShow["artist_image_link"]=artistInfo.image_link
+    currentShow["artist_name"]=show.artist.name
+    currentShow["artist_image_link"]=show.artist.image_link
     currentShow["start_time"]=show.start_time
     data.append(currentShow)
 
