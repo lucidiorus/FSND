@@ -203,12 +203,9 @@ def search_venues():
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
   # shows the venue page with the given venue_id
-  # TODO: replace with real venue data from the venues table, using venue_id
+  # DONE: replace with real venue data from the venues table, using venue_id
 
-  #LEFT UPCOMING SHOWS
-  
   venue = Venue.query.get(venue_id)
-
   
   if venue is None:
     return redirect(url_for('venues'))
@@ -227,12 +224,28 @@ def show_venue(venue_id):
   data["seeking_description"]=venue.seeking_description
   data["image_link"]=venue.image_link
 
-  # shows = Show.query.filter_by(venue=venue.id).all()
-  # print(shows)
-  # upcoming shows
-  # upcoming shows count
-  # past shows
- 
+  upcoming_shows_count=0
+  past_shows_count=0
+  upcoming_shows = []
+  past_shows = []
+  for show in venue.shows:
+    current_show = {}
+    current_show['artist_id'] = show.artist_id
+    current_show['artist_name'] = show.artist.name
+    current_show['artist_image_link'] = show.artist.image_link
+    current_show['start_time'] = show.start_time
+    if datetime.strptime(show.start_time, '%Y-%m-%d %H:%M:%S') > datetime.now():
+      upcoming_shows_count = upcoming_shows_count + 1
+      upcoming_shows.append(current_show)
+    else:
+      past_shows_count = past_shows_count + 1
+      past_shows.append(current_show)
+
+  data["upcoming_shows_count"] = upcoming_shows_count
+  data["past_shows_count"] = past_shows_count
+  data["past_shows"] = past_shows
+  data["upcoming_shows"] = upcoming_shows
+
   # data1={
   #   "id": 1,
   #   "name": "The Musical Hop",
@@ -413,6 +426,11 @@ def artists():
     artist = {}
     artist["id"]=currentArtist.id
     artist["name"]=currentArtist.name
+    num_upcoming_shows=0
+    for show in currentArtist.shows:
+      if datetime.strptime(show.start_time, '%Y-%m-%d %H:%M:%S') > datetime.now():
+        num_upcoming_shows = num_upcoming_shows + 1
+    artist["num_upcoming_shows"] = num_upcoming_shows
     data.append(artist)
 
   # data=[{
@@ -429,11 +447,9 @@ def artists():
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
+  # DONE: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
   # search for "band" should return "The Wild Sax Band".
-
-  #LEFT upcoming shows
 
   searchTerm = request.form['search_term']
   if searchTerm:
@@ -449,7 +465,11 @@ def search_artists():
     currentArtist = {}
     currentArtist["id"]=artist.id
     currentArtist["name"]=artist.name
-    # currentArtist["num_upcoming_shows"]=0
+    num_upcoming_shows=0
+    for show in artist.shows:
+      if datetime.strptime(show.start_time, '%Y-%m-%d %H:%M:%S') > datetime.now():
+        num_upcoming_shows = num_upcoming_shows + 1
+    currentArtist["num_upcoming_shows"] = num_upcoming_shows
     data.append(currentArtist)
  
   response["data"]=data
@@ -467,9 +487,7 @@ def search_artists():
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
   # shows the venue page with the given venue_id
-  # TODO: replace with real venue data from the venues table, using venue_id
-
-  # left upcoming, past shows
+  # DONE: replace with real venue data from the venues table, using venue_id
 
   artist = Artist.query.get(artist_id)
 
@@ -485,6 +503,28 @@ def show_artist(artist_id):
   data["seeking_description"]=artist.seeking_description
   data["phone"]=artist.phone
   data["image_link"]=artist.image_link
+
+  upcoming_shows_count=0
+  past_shows_count=0
+  upcoming_shows = []
+  past_shows = []
+  for show in artist.shows:
+    current_show = {}
+    current_show['venue_id'] = show.venue_id
+    current_show['venue_name'] = show.venue.name
+    current_show['venue_image_link'] = show.venue.image_link
+    current_show['start_time'] = show.start_time
+    if datetime.strptime(show.start_time, '%Y-%m-%d %H:%M:%S') > datetime.now():
+      upcoming_shows_count = upcoming_shows_count + 1
+      upcoming_shows.append(current_show)
+    else:
+      past_shows_count = past_shows_count + 1
+      past_shows.append(current_show)
+
+  data["upcoming_shows_count"] = upcoming_shows_count
+  data["past_shows_count"] = past_shows_count
+  data["past_shows"] = past_shows
+  data["upcoming_shows"] = upcoming_shows
 
   # data1={
   #   "id": 4,
@@ -666,7 +706,7 @@ def edit_venue(venue_id):
   #   "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
   #   "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60"
   # }
-  # TODO: populate form with values from venue with ID <venue_id>
+  # DONE: populate form with values from venue with ID <venue_id>
   return render_template('forms/edit_venue.html', form=form, venue=venue)
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
