@@ -102,7 +102,7 @@ ul.items {
   margin: 0;
 }
 ul.items > li > a {
-  margin-bottom: 15px;
+  margin-bottom: 5px;
   display: flex;
   color: initial;
   text-decoration: initial;

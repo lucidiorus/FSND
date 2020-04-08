@@ -12,6 +12,12 @@
 			</div>
 		</a>
 	</li>
+	<div style="margin:0 0 20px 40px">
+		{% if venue.num_upcoming_shows==0 %} No upcoming shows
+		{% elif venue.num_upcoming_shows==1  %} {{ venue.num_upcoming_shows }} upcoming show
+		{% else %} {{ venue.num_upcoming_shows }} upcoming shows
+		{% endif %}
+	</div>
 	{% endfor %}
 </ul>
 {% endblock %}

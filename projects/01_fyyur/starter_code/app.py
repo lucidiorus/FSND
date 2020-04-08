@@ -12,6 +12,7 @@ from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy import distinct, text
+from datetime import datetime
 import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
@@ -109,10 +110,8 @@ def index():
 
 @app.route('/venues')
 def venues():
-  # TODO: replace with real venues data.
+  # DONE: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
-
-  #LEFT UPCOMING SHOWS...
 
   areas = []
   sql = text('select city, state FROM venue GROUP BY city, state ORDER BY city')
@@ -129,19 +128,16 @@ def venues():
       currentVenue = {}
       currentVenue["id"] = venue.id
       currentVenue["name"] = venue.name
+      num_upcoming_shows=0
+      for show in venue.shows:
+        if datetime.strptime(show.start_time, '%Y-%m-%d %H:%M:%S') > datetime.now():
+          num_upcoming_shows = num_upcoming_shows + 1
+      currentVenue["num_upcoming_shows"] = num_upcoming_shows
       venues.append(currentVenue)
     
     currentArea["venues"] = venues
     areas.append(currentArea)
     cityAndState = result.fetchone()
-
-  # print(areas)
-  # for city in cities:
-  #   venues = Venue.query.filter_by(city=city).all()
-  #   allVenues = []
-  #   for venue in venues:
-  #     currentVenue = '"id": ' + venue.id + ', "name": "' + venue.name + '", "num_upcoming_shows":0'
-  #     allVenues.loads(cu)    
 
   # data=[{
   #   "city": "San Francisco",
@@ -168,11 +164,9 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
+  # DONE: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-
-  #LEFT UPCOMING SHOWS
 
   searchTerm = request.form['search_term']
   if searchTerm:
@@ -187,7 +181,11 @@ def search_venues():
     currentVenue = {}
     currentVenue["id"]=venue.id
     currentVenue["name"]=venue.name
-    # currentVenue["num_upcoming_shows"]=0
+    num_upcoming_shows=0
+    for show in venue.shows:
+      if datetime.strptime(show.start_time, '%Y-%m-%d %H:%M:%S') > datetime.now():
+        num_upcoming_shows = num_upcoming_shows + 1
+    currentVenue["num_upcoming_shows"] = num_upcoming_shows
     data.append(currentVenue)
  
   response["data"]=data
@@ -735,8 +733,8 @@ def create_artist_form():
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
   # called upon submitting the new artist listing form
-  # TODO: insert form data as a new Venue record in the db, instead
-  # TODO: modify data to be the data object returned from db insertion
+  # DONE: insert form data as a new Venue record in the db, instead
+  # DONE: modify data to be the data object returned from db insertion
 
   error = False
   try:
@@ -750,7 +748,7 @@ def create_artist_submission():
     image_link = request.form['image_link']
     if 'seeking_venue' not in request.form:
       seeking_venue = False
-      seeking_description = None
+      seeking_description = ""
     else:
       seeking_venue = True
       seeking_description = request.form['seeking_description']
@@ -848,11 +846,26 @@ def create_shows():
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
   # called to create new shows in the db, upon submitting new show listing form
-  # TODO: insert form data as a new Show record in the db, instead
+  # DONE: insert form data as a new Show record in the db, instead
+
+  artist_id = request.form["artist_id"]
+  venue_id = request.form["venue_id"]
+  start_time = request.form["start_time"]
+  artist = Artist.query.get(artist_id)
+  venue = Venue.query.get(venue_id)
+
+  print(artist)
+  if artist is None or venue is None:
+    flash('There was an error!')
+  else:
+    show = Show(artist_id=artist_id, venue_id=venue_id, start_time=start_time, artist=artist, venue=venue)
+    db.session.add(show)
+    db.session.commit()
+    flash('Show was created succesfully!')
 
   # on successful db insert, flash success
-  flash('Show was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
+  
+  # DONE: on unsuccessful db insert, flash an error instead.
   # e.g., flash('An error occurred. Show could not be listed.')
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return render_template('pages/home.html')
