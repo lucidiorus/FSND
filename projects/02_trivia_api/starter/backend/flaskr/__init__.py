@@ -8,6 +8,8 @@ from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
 
+
+# This method to paginate the questions has been created to make the code less complex
 def paginate_questions(request, selection):
   page = request.args.get('page', 1, type=int)
   start = (page - 1) * QUESTIONS_PER_PAGE
@@ -25,12 +27,12 @@ def create_app(test_config=None):
   setup_db(app)
   
   '''
-  @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
+  @DONE: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
   '''
   cors = CORS(app)
 
   '''
-  @TODO: Use the after_request decorator to set Access-Control-Allow
+  @DONE: Use the after_request decorator to set Access-Control-Allow
   '''
   # CORS Headers 
   @app.after_request
@@ -40,7 +42,7 @@ def create_app(test_config=None):
     return response
 
   '''
-  @TODO: 
+  @DONE: 
   Create an endpoint to handle GET requests 
   for all available categories.
   '''
@@ -53,11 +55,9 @@ def create_app(test_config=None):
       'categories': formatted_categories
     })
 
-    
-
 
   '''
-  @TODO: 
+  @DONE: 
   Create an endpoint to handle GET requests for questions, 
   including pagination (every 10 questions). 
   This endpoint should return a list of questions, 
@@ -69,14 +69,15 @@ def create_app(test_config=None):
   Clicking on the page numbers should update the questions. 
   '''
   @app.route('/questions')
-  def get_questions():
+  def get_paginated_questions():
     questions = Question.query.order_by(Question.id).all()
     formatted_questions = paginate_questions(request, questions)
+    total_questions = len(formatted_questions)
     current_category = request.args.get('currentCategory', 0, type=int)
-    total_questions = len(questions)
     categories = Category.query.all()
     formatted_categories = formatted_categories = {category.id:category.type for category in categories}
     
+    # if there are no questions -> Error 404: Resource Not Found
     if total_questions == 0:
       abort(404)
 
@@ -89,7 +90,7 @@ def create_app(test_config=None):
     })
 
   '''
-  @TODO: 
+  @DONE: 
   Create an endpoint to DELETE question using a question ID. 
 
   TEST: When you click the trash icon next to a question, the question will be removed.
@@ -98,8 +99,9 @@ def create_app(test_config=None):
   @app.route('/questions/<int:question_id>', methods=['DELETE'])
   def delete_question(question_id):
     try:
-      question = Question.query.get(question_id)
+      question = Question.query.filter(Question.id == question_id).one_or_none()
 
+      # if there is no question, this launch the 422 exception, Unprocessable Entity
       if question is None:
         abort(404)
 
@@ -110,11 +112,11 @@ def create_app(test_config=None):
       })
 
     except:
-      abort(400)
+      abort(422)
 
 
   '''
-  @TODO: 
+  @DONE: 
   Create an endpoint to POST a new question, 
   which will require the question and answer text, 
   category, and difficulty score.
@@ -136,17 +138,18 @@ def create_app(test_config=None):
     try:
       question = Question(question=new_question, answer=new_answer, 
       difficulty=new_difficulty, category=new_category)
-      question.insert()   
+      question.insert()
 
       return jsonify({
         'success': True
       })
 
+    # If well formatted question but not possible to process. 422 exception, Unprocessable Entity
     except:
       abort(422)
 
   '''
-  @TODO: 
+  @DONE: 
   Create a POST endpoint to get questions based on a search term. 
   It should return any questions for whom the search term 
   is a substring of the question. 
@@ -166,6 +169,7 @@ def create_app(test_config=None):
     total_questions = len(questions)
     current_category = request.args.get('currentCategory', 0, type=int)
 
+    # if there are no questions -> Error 404: Resource Not Found
     if total_questions == 0:
       abort(404)
     
@@ -179,7 +183,7 @@ def create_app(test_config=None):
 
 
   '''
-  @TODO: 
+  @DONE: 
   Create a GET endpoint to get questions based on category. 
 
   TEST: In the "List" tab / main screen, clicking on one of the 
@@ -194,6 +198,7 @@ def create_app(test_config=None):
     total_questions = len(questions)
     current_category = category_id
 
+    # if there are no questions -> Error 404: Resource Not Found
     if total_questions == 0:
       abort(404)
 
@@ -206,7 +211,7 @@ def create_app(test_config=None):
 
 
   '''
-  @TODO: 
+  @DONE: 
   Create a POST endpoint to get questions to play the quiz. 
   This endpoint should take category and previous question parameters 
   and return a random questions within the given category, 
@@ -230,16 +235,18 @@ def create_app(test_config=None):
     else:
       new_question = Question.query.filter(Question.id.notin_(previous_questions)).filter_by(category=quiz_category_id).first()
 
+    # if there is no question -> Error 404: Resource Not Found
     if new_question is None:
       abort(404)
       
     return jsonify({
+      'success': True,
       'question': new_question.format()
     })
 
 
   '''
-  @TODO: 
+  @DONE: 
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
