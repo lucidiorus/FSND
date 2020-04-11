@@ -91,3 +91,9 @@ Above each endpoint there is a comment givin clear information about what that c
 ### Forms
 
 Some forms have been completed as they were not incluying all the necessary fields to complete the functionality.
+
+
+### Bonus
+* Button to delete a venue has been created and is working.
+* List of venues shows the number of upcoming events
+* For every page (except shows), the distinction between past shows and upcoming shows is completed
