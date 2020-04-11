@@ -173,6 +173,7 @@ The API will return three error types when request fail:
 * General:
     * Create a new question using the question field, answer, difficulty and category.  
     Return success value and the id of the question created
+    * Request params: question, answer, category, difficulty
 * Sample: `curl http://127:0.0.1:5000/questions -X POST -H "Content-Type: application/json" -d '{"question":"question1", "answer":"answer1", "category":"1", "difficulty":"5"}'`
 ```
 {
@@ -198,6 +199,7 @@ The API will return three error types when request fail:
 
 * General:
     * Search a question of group of questions which contains the search term included in the body of the request. Return success value, a bundle of questions, the list of categories and the current category
+    * * Request params: seachTerm
 * Sample: `curl http://127:0.0.1:5000/search -X POST -H "Content-Type: application/json" -d '{"searchTerm":"lake"}'`
 ```
 {
