@@ -19,6 +19,8 @@ All backend code follows PEP8 style guidelines.
 
 Developers using this project should already have Python2, pip and node installed on their local machines
 
+A virual environment has been created and is in the main folder inside the folder 'venv'
+
 ### Backend
 
 To install all the requirements run `pip install requirements.txt` from the backend folder
@@ -79,6 +81,7 @@ npm start
 
 
 ### Testing
+Before anything you should set the database changing the self.database_path in "test_flaskr.py
 
 To run the tests, run
 ```
