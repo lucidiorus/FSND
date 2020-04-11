@@ -17,6 +17,7 @@ import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
+
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -27,11 +28,12 @@ app.config.from_object('config')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# connect to a local postgresql database - DONE in config
+# connect to a local postgresql database - DONE in config.py
 
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
+
 
 class Venue(db.Model):
     __tablename__ = 'venue'
@@ -50,7 +52,6 @@ class Venue(db.Model):
     seeking_description = db.Column(db.String(), nullable=True)
     shows = db.relationship('Show', back_populates="venue")
 
-    # DONE: implement any missing fields, as a database migration using Flask-Migrate
 
 class Artist(db.Model):
     __tablename__ = 'artist'
@@ -68,9 +69,7 @@ class Artist(db.Model):
     seeking_description = db.Column(db.String(500), nullable=True)
     shows = db.relationship('Show', back_populates="artist")
 
-    # DONE: implement any missing fields, as a database migration using Flask-Migrate
 
-# DONE Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 class Show(db.Model):
   __tablename__ = 'show'
   id = db.Column(db.Integer, primary_key=True)
@@ -80,6 +79,9 @@ class Show(db.Model):
   artist = db.relationship("Artist", back_populates="shows")
   venue = db.relationship("Venue", back_populates="shows")
 
+
+# DONE: implement any missing fields, as a database migration using Flask-Migrate
+# DONE Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
 
 #----------------------------------------------------------------------------#
@@ -96,6 +98,7 @@ def format_datetime(value, format='medium'):
 
 app.jinja_env.filters['datetime'] = format_datetime
 
+
 #----------------------------------------------------------------------------#
 # Controllers.
 #----------------------------------------------------------------------------#
@@ -108,10 +111,11 @@ def index():
 #  Venues
 #  ----------------------------------------------------------------
 
+# returns all the venues grouped by areas
 @app.route('/venues')
 def venues():
   # DONE: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
+  # num_shows should be aggregated based on number of upcoming shows per venue.
 
   areas = []
   sql = text('select city, state FROM venue GROUP BY city, state ORDER BY city')
@@ -162,6 +166,8 @@ def venues():
   # }]
   return render_template('pages/venues.html', areas=areas)
 
+
+# Returns all the venues which name contains the search term passed in the body request
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
   # DONE: implement search on artists with partial string search. Ensure it is case-insensitive.
@@ -200,6 +206,8 @@ def search_venues():
   # }
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
+
+# Returns the venue with the id indicated in the request
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
   # shows the venue page with the given venue_id
@@ -329,11 +337,13 @@ def show_venue(venue_id):
 #  Create Venue
 #  ----------------------------------------------------------------
 
+# Returns the form to create a new venue 
 @app.route('/venues/create', methods=['GET'])
 def create_venue_form():
   form = VenueForm()
   return render_template('forms/new_venue.html', form=form)
 
+# Creates a venue with the information indicated in the form 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
   # DONE: insert form data as a new Venue record in the db
@@ -381,6 +391,7 @@ def create_venue_submission():
   # DONE: on unsuccessful db insert, flash an error instead.
   
 
+# Deletes the venue with the id given in the request
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 # @app.route('/venues/delete/<venue_id>')
 def delete_venue(venue_id):
@@ -406,7 +417,7 @@ def delete_venue(venue_id):
     # flash('Venue with id ' + venue_id + ' was successfully deleted!')
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   
-    # DONE BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
+  # DONE BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
   # clicking that button delete it from the db then redirect the user to the homepage
 
   # return redirect(url_for('venues'))
@@ -415,6 +426,8 @@ def delete_venue(venue_id):
 
 #  Artists
 #  ----------------------------------------------------------------
+
+# return all the artists
 @app.route('/artists')
 def artists():
   # DONE: replace with real data returned from querying the database
@@ -445,6 +458,7 @@ def artists():
   # }]
   return render_template('pages/artists.html', artists=data)
 
+# return all the artist which name is contained in the search term
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
   # DONE: implement search on artists with partial string search. Ensure it is case-insensitive.
@@ -484,6 +498,8 @@ def search_artists():
   # }
   return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
+
+# returns the artist with the id indicated in the route
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
   # shows the venue page with the given venue_id
@@ -602,6 +618,8 @@ def show_artist(artist_id):
 
 #  Update
 #  ----------------------------------------------------------------
+
+# returns the data to show the form to edit the artist with the id indicated in the request
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
 
@@ -629,6 +647,8 @@ def edit_artist(artist_id):
   # DONE: populate form with fields from artist with ID <artist_id>
   return render_template('forms/edit_artist.html', form=form, artist=artist)
 
+
+# edit the artist with the id indicated with the data received from the edit form
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
   # DONE: take values from the form submitted, and update existing
@@ -677,10 +697,12 @@ def edit_artist_submission(artist_id):
     #flash('Venue ' + request.form['name'] + ' was successfully listed!')
     flash('Artist ' + name + ' was successfully edited!')
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-  
+
 
   return redirect(url_for('show_artist', artist_id=artist_id))
 
+
+# returns the info of the venue so it can be edited in a form
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
   form = VenueForm()
@@ -709,6 +731,8 @@ def edit_venue(venue_id):
   # DONE: populate form with values from venue with ID <venue_id>
   return render_template('forms/edit_venue.html', form=form, venue=venue)
 
+
+# takes the info of the venue inserted in the form to edit such artist
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
   # DONE: take values from the form submitted, and update existing
@@ -765,11 +789,14 @@ def edit_venue_submission(venue_id):
 #  Create Artist
 #  ----------------------------------------------------------------
 
+# shows the form to create a new artist
 @app.route('/artists/create', methods=['GET'])
 def create_artist_form():
   form = ArtistForm()
   return render_template('forms/new_artist.html', form=form)
 
+
+# get the data from the form and create an artist with that information
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
   # called upon submitting the new artist listing form
@@ -820,11 +847,12 @@ def create_artist_submission():
 #  Shows
 #  ----------------------------------------------------------------
 
+# returns all shows
 @app.route('/shows')
 def shows():
   # displays list of shows at /shows
   # DONE: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
+  # num_shows should be aggregated based on number of upcoming shows per venue.
 
   shows = Show.query.all();
 
@@ -877,12 +905,16 @@ def shows():
   # }]
   return render_template('pages/shows.html', shows=data)
 
+
+# shows the form to create a new show
 @app.route('/shows/create')
 def create_shows():
   # renders form. do not touch.
   form = ShowForm()
   return render_template('forms/new_show.html', form=form)
 
+
+# get the data from the form to create a new show and insert it in the database
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
   # called to create new shows in the db, upon submitting new show listing form
