@@ -52,6 +52,7 @@ def create_app(test_config=None):
     formatted_categories = {category.id:category.type for category in categories}
     
     return jsonify({
+      'success': True,
       'categories': formatted_categories
     })
 
@@ -100,7 +101,7 @@ def create_app(test_config=None):
   def delete_question(question_id):
     try:
       question = Question.query.filter(Question.id == question_id).one_or_none()
-
+      
       # if there is no question, this launch the 422 exception, Unprocessable Entity
       if question is None:
         abort(404)
@@ -108,7 +109,8 @@ def create_app(test_config=None):
       question.delete()
       
       return jsonify({
-        'success': True
+        'success': True,
+        'id': question.id
       })
 
     except:
@@ -139,9 +141,10 @@ def create_app(test_config=None):
       question = Question(question=new_question, answer=new_answer, 
       difficulty=new_difficulty, category=new_category)
       question.insert()
-
+      
       return jsonify({
-        'success': True
+        'success': True,
+        'id': question.id
       })
 
     # If well formatted question but not possible to process. 422 exception, Unprocessable Entity
